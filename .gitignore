@@ -3,6 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# music
+*.mp3
+
 # C extensions
 *.so
 
