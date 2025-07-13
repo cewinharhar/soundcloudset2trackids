@@ -1,0 +1,7 @@
+pydub
+python-dotenv
+acrcloud
+requests
+scdl
+tqdm
+
