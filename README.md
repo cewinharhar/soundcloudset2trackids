@@ -1,6 +1,6 @@
 # 🚀 SoundCloud Tracklist Extractor - Deployment Guide
 
-This guide will help you deploy the SoundCloud Tracklist Extractor web application for **FREE** using various cloud platforms.
+This guide will help you deploy the SoundCloud Tracklist Extractor web application for **FREE** using major cloud platforms.
 
 ## 📋 Prerequisites
 
@@ -49,58 +49,9 @@ your-project/
     └── soundcloudtracks/
 ```
 
-## 🌟 Free Deployment Options
+## 🌟 Cloud Deployment Options
 
-### Option 1: Railway (Recommended - Easiest)
-
-Railway offers $5 free credits monthly and easy deployment.
-
-1. **Sign up at [Railway](https://railway.app/)**
-2. **Connect your GitHub repository**
-3. **Deploy:**
-   - Click "New Project" → "Deploy from GitHub repo"
-   - Select your repository
-   - Railway will auto-detect the Dockerfile
-
-4. **Set Environment Variables:**
-   - Go to your project → Variables tab
-   - Add your ACR credentials:
-     ```
-     ACR_HOST=identify-eu-west-1.acrcloud.com
-     ACR_KEY=your_acr_access_key_here
-     ACR_SECRET=your_acr_secret_here
-     SECRET_KEY=your-secret-key-change-in-production
-     PORT=5000
-     ```
-
-5. **Deploy:**
-   - Railway will automatically build and deploy
-   - You'll get a public URL like `https://your-app.railway.app`
-
-### Option 2: Render (Free Tier)
-
-Render offers free hosting with some limitations.
-
-1. **Sign up at [Render](https://render.com/)**
-2. **Create a new Web Service:**
-   - Connect your GitHub repository
-   - Choose "Docker" as the environment
-   - Set build command: `docker build -t app .`
-   - Set start command: `docker run -p 10000:5000 app`
-
-3. **Environment Variables:**
-   - Add the same variables as above
-   - Set `PORT=10000` (Render requirement)
-
-4. **Deploy:**
-   - Render will build and deploy automatically
-   - Free tier includes 750 hours per month
-
-### Option 3: Heroku (Free Tier Discontinued - Use Alternatives)
-
-**Note:** Heroku discontinued free tier. Use Railway or Render instead.
-
-### Option 4: Google Cloud Run (Free Tier)
+### Option 1: Google Cloud Run (Free Tier)
 
 Google Cloud Run offers 2 million requests per month for free.
 
@@ -130,7 +81,7 @@ Google Cloud Run offers 2 million requests per month for free.
      --set-env-vars SECRET_KEY=your-secret-key
    ```
 
-### Option 5: Azure Container Instances (Free Credits)
+### Option 2: Azure Container Instances (Free Credits)
 
 Azure offers $200 free credits for new accounts.
 
@@ -159,7 +110,58 @@ Azure offers $200 free credits for new accounts.
        SECRET_KEY=your-secret-key
    ```
 
-## 🛠️ Local Development
+### Option 3: AWS Elastic Container Service (ECS) (Free Tier)
+
+AWS offers a free tier for ECS Fargate and ECR (Elastic Container Registry).
+
+1. **Install AWS CLI and configure your credentials**
+2. **Create an ECR repository:**
+   ```bash
+   aws ecr create-repository --repository-name soundcloud-extractor
+   ```
+3. **Authenticate Docker to your ECR registry:**
+   ```bash
+   aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<your-region>.amazonaws.com
+   ```
+4. **Build and push the Docker image:**
+   ```bash
+   docker build -t soundcloud-extractor .
+   docker tag soundcloud-extractor:latest <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/soundcloud-extractor:latest
+   docker push <your-account-id>.dkr.ecr.<your-region>.amazonaws.com/soundcloud-extractor:latest
+   ```
+5. **Deploy using ECS Fargate:**
+   - Create a new ECS cluster and task definition using the pushed image
+   - Set environment variables in the task definition
+   - Expose port 5000
+   - Launch the service
+
+Refer to the [AWS ECS documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-launch-types.html) for detailed steps.
+
+## 🛠️ Local Development & Docker Testing
+
+### Test the Docker Container Locally
+
+1. **Create a `.env` file** in your project root with your credentials:
+   ```bash
+   ACR_HOST=identify-eu-west-1.acrcloud.com
+   ACR_KEY=your_acr_access_key_here
+   ACR_SECRET=your_acr_secret_here
+   SECRET_KEY=your-secret-key-change-in-production
+   FLASK_ENV=production
+   PORT=5000
+   ```
+
+2. **Build the Docker image:**
+   ```bash
+   docker build -t soundcloud-extractor .
+   ```
+
+3. **Run the Docker container:**
+   ```bash
+   docker run --env-file .env -p 5000:5000 soundcloud-extractor
+   ```
+
+4. **Access the application at** [http://localhost:5000](http://localhost:5000)
 
 ### Using Docker Compose
 
@@ -260,10 +262,9 @@ Azure offers $200 free credits for new accounts.
 ### Free Tier Limits
 
 - **ACRCloud:** 1,000 recognitions/month
-- **Railway:** $5 credit monthly (~750 hours)
-- **Render:** 750 hours/month
 - **Google Cloud Run:** 2M requests/month
 - **Azure:** $200 credit for new accounts
+- **AWS ECS:** Free tier for 12 months (750 hours/month for Fargate)
 
 ### Usage Calculation
 

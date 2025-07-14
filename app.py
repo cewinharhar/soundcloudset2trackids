@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'soundcloudset2trackids')
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Store active sessions
@@ -217,4 +217,5 @@ if __name__ == '__main__':
     os.makedirs('./output/soundcloudtracks', exist_ok=True)
     
     # Run the app
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, debug=True, host='0.0.0.0', port=port)

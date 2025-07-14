@@ -1,10 +1,10 @@
 Flask==2.3.3
 Flask-SocketIO==5.3.6
-pydub==0.25.1
+pydub
 python-dotenv==1.0.0
-acrcloud==1.1.0
+acrcloud
 requests==2.31.0
-scdl==2.7.2
+scdl
 tqdm==4.66.1
 gunicorn==21.2.0
 python-socketio==5.8.0
