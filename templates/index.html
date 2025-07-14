@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundCloud Tracklist Extractor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-section {
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="url"], input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="url"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .form-row .form-group:last-child {
+            flex: 0 0 200px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .progress-section {
+            padding: 40px;
+            background: white;
+            display: none;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .results-section {
+            padding: 40px;
+            background: white;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .tracklist {
+            list-style: none;
+        }
+
+        .track-item {
+            background: #f8f9fa;
+            margin-bottom: 15px;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .track-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .track-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .track-details {
+            flex: 1;
+        }
+
+        .track-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .track-artist {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .track-time {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .track-actions {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .youtube-btn {
+            background: #FF0000;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+
+        .youtube-btn:hover {
+            background: #cc0000;
+        }
+
+        .track-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-not-found {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .summary {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .summary h2 {
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .console-line {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .form-row .form-group:last-child {
+                flex: 1;
+            }
+            
+            .track-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .track-actions {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 SoundCloud Tracklist Extractor</h1>
+            <p>Extract tracklistst from SoundCloud DJ sets and mixes</p>
+        </div>
+
+        <div class="form-section">
+            <form id="extractForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="soundcloudUrl">SoundCloud URL</label>
+                        <input type="url" id="soundcloudUrl" name="soundcloudUrl" 
+                               placeholder="https://soundcloud.com/artist/track-or-set" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="chunkDuration">Chunk Duration (seconds)</label>
+                        <input type="number" id="chunkDuration" name="chunkDuration" 
+                               value="10" min="5" max="60">
+                    </div>
+                </div>
+                <button type="submit" class="btn" id="extractBtn">
+                    Extract Tracklist
+                </button>
+            </form>
+        </div>
+
+        <div class="progress-section" id="progressSection">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Initializing...</div>
+            <div class="console-output" id="consoleOutput"></div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+            <div id="summary" class="summary" style="display: none;"></div>
+            <ul id="tracklist" class="tracklist"></ul>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let currentSessionId = null;
+
+        const form = document.getElementById('extractForm');
+        const extractBtn = document.getElementById('extractBtn');
+        const progressSection = document.getElementById('progressSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const consoleOutput = document.getElementById('consoleOutput');
+        const tracklist = document.getElementById('tracklist');
+        const errorMessage = document.getElementById('errorMessage');
+        const summary = document.getElementById('summary');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('soundcloudUrl').value;
+            const chunkDuration = parseInt(document.getElementById('chunkDuration').value);
+            
+            if (!url) {
+                alert('Please enter a SoundCloud URL');
+                return;
+            }
+
+            // Reset UI
+            resetUI();
+            
+            // Show progress section
+            progressSection.classList.add('active');
+            resultsSection.classList.remove('active');
+            
+            // Disable button
+            extractBtn.disabled = true;
+            extractBtn.innerHTML = '<span class="loading"></span> Extracting...';
+            
+            try {
+                const response = await fetch('/extract', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        chunk_duration: chunkDuration
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                currentSessionId = data.session_id;
+                socket.emit('join_session', { session_id: currentSessionId });
+                
+            } catch (error) {
+                showError(error.message);
+                resetButton();
+            }
+        });
+
+        socket.on('progress_update', (data) => {
+            updateProgress(data.message, data.progress);
+        });
+
+        socket.on('extraction_complete', (data) => {
+            displayResults(data.tracklist);
+            resetButton();
+        });
+
+        socket.on('extraction_error', (data) => {
+            showError(data.error);
+            resetButton();
+        });
+
+        function updateProgress(message, progress) {
+            progressText.textContent = message;
+            addConsoleMessage(message);
+            
+            if (progress !== null) {
+                progressFill.style.width = `${progress}%`;
+            }
+        }
+
+        function addConsoleMessage(message) {
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        function displayResults(tracklistData) {
+            progressSection.classList.remove('active');
+            resultsSection.classList.add('active');
+            
+            const validTracks = tracklistData.filter(track => track.status === 'ok');
+            const totalTracks = tracklistData.length;
+            
+            // Show summary
+            summary.innerHTML = `
+                <h2>Extraction Complete!</h2>
+                <p>Found <strong>${validTracks.length}</strong> identifiable tracks out of <strong>${totalTracks}</strong> chunks processed.</p>
+            `;
+            summary.style.display = 'block';
+            
+            // Clear previous results
+            tracklist.innerHTML = '';
+            
+            // Display tracks
+            tracklistData.forEach((track, index) => {
+                const li = document.createElement('li');
+                li.className = 'track-item';
+                
+                const startTime = Math.floor(track.chunk_seconds[0] / 60);
+                const startSeconds = track.chunk_seconds[0] % 60;
+                const timeString = `${startTime}:${startSeconds.toString().padStart(2, '0')}`;
+                
+                if (track.status === 'ok') {
+                    li.innerHTML = `
+                        <div class="track-info">
+                            <div class="track-number">${index + 1}</div>
+                            <div class="track-details">
+                                <div class="track-title">${track.title}</div>
+                                <div class="track-artist">${track.artist}</div>
+                                <div class="track-time">@ ${timeString}</div>
+                            </div>
+                            <div class="track-actions">
+                                <span class="track-status status-ok">Identified</span>
+                                ${track.youtube_url ? `<a href="${track.youtube_url}" target="_blank" class="youtube-btn">
+                                    ▶️ YouTube
+                                </a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    li.innerHTML = `
+                        <div class="track-info">
+                            <div class="track-number">${index + 1}</div>
+                            <div class="track-details">
+                                <div class="track-title">Unknown Track</div>
+                                <div class="track-artist">@ ${timeString}</div>
+                            </div>
+                            <div class="track-actions">
+                                <span class="track-status status-${track.status === 'error' ? 'error' : 'not-found'}">
+                                    ${track.status}
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                tracklist.appendChild(li);
+            });
+        }
+
+        function showError(message) {
+            progressSection.classList.remove('active');
+            resultsSection.classList.add('active');
+            
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            summary.style.display = 'none';
+            tracklist.innerHTML = '';
+        }
+
+        function resetButton() {
+            extractBtn.disabled = false;
+            extractBtn.innerHTML = 'Extract Tracklist';
+        }
+
+        function resetUI() {
+            progressFill.style.width = '0%';
+            progressText.textContent = 'Initializing...';
+            consoleOutput.innerHTML = '';
+            errorMessage.style.display = 'none';
+            summary.style.display = 'none';
+            tracklist.innerHTML = '';
+        }
+
+        // Handle socket connection
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+    </script>
+</body>
+</html>
