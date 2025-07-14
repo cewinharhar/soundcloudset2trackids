@@ -11,7 +11,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
 # Install scdl globally
-RUN npm install -g scdl
+RUN npm install -g scdl-core
 
 # Set working directory
 WORKDIR /app
