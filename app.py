@@ -216,6 +216,9 @@ if __name__ == '__main__':
     os.makedirs('./output', exist_ok=True)
     os.makedirs('./output/soundcloudtracks', exist_ok=True)
     
-    # Run the app
-    port = int(os.environ.get('PORT', 5000))
-    socketio.run(app, debug=True, host='0.0.0.0', port=port)
+    # Get port from environment variable for App Runner compatibility
+    port = int(os.environ.get('PORT', 8000))
+    
+    # Run the app in production mode (debug=False) and listen on all interfaces
+    # This is now your production server starter
+    socketio.run(app, host='0.0.0.0', port=port, debug=False)

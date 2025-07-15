@@ -358,7 +358,7 @@
     <div class="container">
         <div class="header">
             <h1>🎵 SoundCloud Tracklist Extractor</h1>
-            <p>Extract tracklistst from SoundCloud DJ sets and mixes</p>
+            <p>Extract tracklists from SoundCloud DJ sets and mixes</p>
         </div>
 
         <!-- Buy Me a Coffee Button -->
@@ -376,13 +376,27 @@
                         <input type="url" id="soundcloudUrl" name="soundcloudUrl" 
                                placeholder="https://soundcloud.com/artist/track-or-set" required>
                     </div>
-                    <div class="form-group">
-                        <label for="chunkDuration">Chunk Duration (seconds)</label>
+                    <div class="form-group" style="position: relative;">
+                        <label for="chunkDuration">
+                            Chunk Duration (seconds)
+                            <span class="info-tooltip" tabindex="0">
+                                <span style="font-size: 15px; font-weight: bold; color: #ff5500; cursor: pointer; margin-left: 4px;">&#x3f;</span>
+                                <span class="tooltip-content">
+                                    <strong>What is Chunk Duration?</strong><br>
+                                    The chunk duration sets how long each audio snippet (in seconds) will be analyzed to identify tracks.<br>
+                                    <ul style="margin: 8px 0 0 18px; padding: 0;">
+                                        <li><b>Higher values</b> (e.g. 40-60s): <span style="color:#ff5500;">Faster analysis</span>, but may miss quick track changes.</li>
+                                        <li><b>Lower values</b> (e.g. 5-20s): <span style="color:#ff5500;">More accurate</span> for fast transitions, but takes longer.</li>
+                                    </ul>
+                                    <span style="display:block; margin-top:6px;">For most DJ sets, <b>30 seconds</b> is a good balance.</span>
+                                </span>
+                            </span>
+                        </label>
                         <input type="number" id="chunkDuration" name="chunkDuration" 
-                               value="10" min="5" max="60">
+                               value="30" min="5" max="60">
                     </div>
                 </div>
-                <button type="submit" class="btn" id="extractBtn">
+                <button type="submit" class="btn" id="extractBtn" style="margin-top: 18px;">
                     Extract Tracklist
                 </button>
             </form>
@@ -402,6 +416,50 @@
             <ul id="tracklist" class="tracklist"></ul>
         </div>
     </div>
+    <style>
+        .info-tooltip {
+            position: relative;
+            display: inline-block;
+            outline: none;
+        }
+        .info-tooltip .tooltip-content {
+            visibility: hidden;
+            opacity: 0;
+            width: 320px;
+            background: #fff3e6;
+            color: #b34700;
+            text-align: left;
+            border-radius: 8px;
+            padding: 14px 16px 14px 16px;
+            position: absolute;
+            z-index: 10;
+            left: 50%;
+            top: 120%;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 16px rgba(255,85,0,0.10);
+            font-size: 14px;
+            transition: opacity 0.18s;
+            pointer-events: none;
+        }
+        .info-tooltip:hover .tooltip-content,
+        .info-tooltip:focus .tooltip-content,
+        .info-tooltip:active .tooltip-content {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .info-tooltip .tooltip-content ul {
+            margin: 8px 0 0 18px;
+            padding: 0;
+        }
+        @media (max-width: 600px) {
+            .info-tooltip .tooltip-content {
+                width: 95vw;
+                left: 0;
+                transform: none;
+            }
+        }
+    </style>
 
     <script>
         const socket = io();

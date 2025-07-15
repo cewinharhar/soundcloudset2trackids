@@ -29,12 +29,12 @@ COPY . .
 RUN mkdir -p output/soundcloudtracks
 RUN mkdir -p templates
 
-# Expose port
-EXPOSE 5000
+# Expose port (this is good practice, but PORT env var is what matters)
+EXPOSE 8000
 
 # Set environment variables
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
-# Command to run the application
-CMD ["gunicorn", "--worker-class", "eventlet", "-w", "1", "--bind", "0.0.0.0:5000", "app:app"]
+# Command to run the application - CORRECTED LINE
+CMD ["python", "app.py"]

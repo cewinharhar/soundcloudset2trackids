@@ -117,11 +117,11 @@ AWS offers a free tier for ECS Fargate and ECR (Elastic Container Registry).
 1. **Install AWS CLI and configure your credentials**
 2. **Create an ECR repository:**
    ```bash
-   aws ecr create-repository --repository-name soundcloud-extractor
+   aws ecr create-repository --repository-name sidehustle
    ```
 3. **Authenticate Docker to your ECR registry:**
    ```bash
-   aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <your-account-id>.dkr.ecr.<your-region>.amazonaws.com
+   aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 649207544517.dkr.ecr.us-east-1.amazonaws.com
    ```
 4. **Build and push the Docker image:**
    ```bash
